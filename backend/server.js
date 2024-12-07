@@ -20,7 +20,7 @@ app.use(limiter);
 
 // Configuração CORS
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'https://menuru.vercel.app'],
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
@@ -58,15 +58,11 @@ const validateRestauranteId = (req, res, next) => {
 
 // Get list of restaurants
 app.get('/api/restaurantes', async (req, res) => {
-    console.log('Recebida requisição para /api/restaurantes');
     try {
-        console.log('Fazendo requisição para:', `${baseUrl}/restaurantes`);
         const response = await axios.get(`${baseUrl}/restaurantes`, { headers });
-        console.log('Resposta recebida:', response.data);
         res.json(response.data);
     } catch (error) {
-        console.error('Error fetching restaurants:', error.message);
-        console.error('Error details:', error.response?.data || error);
+        console.error('Error fetching restaurants:', error);
         res.status(500).json({ error: 'Erro ao buscar restaurantes' });
     }
 });
