@@ -19,48 +19,22 @@ import {
   extendTheme,
   IconButton,
   Input,
+  Link,
+  Icon,
+  Flex,
+  Grid,
+  Center,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import { format, addDays, subDays, isToday, isFuture, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import AdSense from './components/AdSense';
 
 const theme = extendTheme({
   styles: {
     global: {
       body: {
-        bg: '#faf7f2', // Cor creme/bege claro
-      },
-    },
-    components: {
-      Card: {
-        baseStyle: {
-          container: {
-            borderRadius: 'xl',
-            transition: 'all 0.2s ease-in-out',
-            _hover: {
-              transform: 'translateY(-2px)',
-              boxShadow: 'lg',
-            },
-          },
-        },
-      },
-      Button: {
-        baseStyle: {
-          borderRadius: 'lg',
-        },
-        variants: {
-          solid: {
-            transition: 'all 0.2s ease-in-out',
-            _hover: {
-              transform: 'translateY(-2px)',
-            },
-          },
-        },
-      },
-      Badge: {
-        baseStyle: {
-          borderRadius: 'lg',
-        },
+        bg: '#faf7f2',
       },
     },
   },
@@ -197,6 +171,51 @@ function App() {
       }
     }
     return '🍽️';
+  };
+
+  // Função para determinar a cor de fundo do cabeçalho da categoria
+  const getTipoBgColor = (tipo) => {
+    const tipoLower = tipo.toLowerCase();
+    if (tipoLower.includes('veg')) return 'green.50';
+    if (tipoLower.includes('mar')) return 'blue.50';
+    if (tipoLower.includes('protéico')) return 'orange.50';
+    if (tipoLower === 'entrada') return 'purple.50';
+    if (tipoLower === 'acompanhamento') return 'pink.50';
+    if (tipoLower === 'guarnição') return 'cyan.50';
+    if (tipoLower === 'molho') return 'red.50';
+    if (tipoLower === 'sobremesa') return 'teal.50';
+    if (tipoLower === 'bebida') return 'gray.50';
+    return 'gray.50';
+  };
+
+  // Função para determinar a cor da borda do cabeçalho
+  const getTipoBorderColor = (tipo) => {
+    const tipoLower = tipo.toLowerCase();
+    if (tipoLower.includes('veg')) return 'green.100';
+    if (tipoLower.includes('mar')) return 'blue.100';
+    if (tipoLower.includes('protéico')) return 'orange.100';
+    if (tipoLower === 'entrada') return 'purple.100';
+    if (tipoLower === 'acompanhamento') return 'pink.100';
+    if (tipoLower === 'guarnição') return 'cyan.100';
+    if (tipoLower === 'molho') return 'red.100';
+    if (tipoLower === 'sobremesa') return 'teal.100';
+    if (tipoLower === 'bebida') return 'gray.100';
+    return 'gray.100';
+  };
+
+  // Função para determinar a cor do texto do cabeçalho
+  const getTipoTextColor = (tipo) => {
+    const tipoLower = tipo.toLowerCase();
+    if (tipoLower.includes('veg')) return 'green.700';
+    if (tipoLower.includes('mar')) return 'blue.700';
+    if (tipoLower.includes('protéico')) return 'orange.700';
+    if (tipoLower === 'entrada') return 'purple.700';
+    if (tipoLower === 'acompanhamento') return 'pink.700';
+    if (tipoLower === 'guarnição') return 'cyan.700';
+    if (tipoLower === 'molho') return 'red.700';
+    if (tipoLower === 'sobremesa') return 'teal.700';
+    if (tipoLower === 'bebida') return 'gray.700';
+    return 'gray.700';
   };
 
   const renderPratos = (pratos) => {
@@ -337,248 +356,174 @@ function App() {
     ));
   };
 
-  // Função para determinar a cor de fundo do cabeçalho da categoria
-  const getTipoBgColor = (tipo) => {
-    const tipoLower = tipo.toLowerCase();
-    if (tipoLower.includes('veg')) return 'green.50';
-    if (tipoLower.includes('mar')) return 'blue.50';
-    if (tipoLower.includes('protéico')) return 'orange.50';
-    if (tipoLower === 'entrada') return 'purple.50';
-    if (tipoLower === 'acompanhamento') return 'pink.50';
-    if (tipoLower === 'guarnição') return 'cyan.50';
-    if (tipoLower === 'molho') return 'red.50';
-    if (tipoLower === 'sobremesa') return 'teal.50';
-    if (tipoLower === 'bebida') return 'gray.50';
-    return 'gray.50';
-  };
+  const renderControls = () => (
+    <VStack spacing={4} mb={6}>
+      <Input
+        type="date"
+        value={format(selectedDate, 'yyyy-MM-dd')}
+        onChange={handleDateChange}
+        size="lg"
+        maxW="300px"
+      />
+      <Select
+        placeholder="Escolha um restaurante"
+        value={selectedRestaurante}
+        onChange={(e) => setSelectedRestaurante(e.target.value)}
+        size="lg"
+        maxW="300px"
+      >
+        {restaurantes.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.nome}
+          </option>
+        ))}
+      </Select>
+      <HStack spacing={4}>
+        <Button
+          colorScheme={tipoRefeicao === 'Almoço' ? 'teal' : 'gray'}
+          onClick={() => setTipoRefeicao('Almoço')}
+          leftIcon={<span>🌞</span>}
+        >
+          Almoço
+        </Button>
+        <Button
+          colorScheme={tipoRefeicao === 'Jantar' ? 'teal' : 'gray'}
+          onClick={() => setTipoRefeicao('Jantar')}
+          leftIcon={<span>🌙</span>}
+        >
+          Jantar
+        </Button>
+      </HStack>
+    </VStack>
+  );
 
-  // Função para determinar a cor da borda do cabeçalho
-  const getTipoBorderColor = (tipo) => {
-    const tipoLower = tipo.toLowerCase();
-    if (tipoLower.includes('veg')) return 'green.100';
-    if (tipoLower.includes('mar')) return 'blue.100';
-    if (tipoLower.includes('protéico')) return 'orange.100';
-    if (tipoLower === 'entrada') return 'purple.100';
-    if (tipoLower === 'acompanhamento') return 'pink.100';
-    if (tipoLower === 'guarnição') return 'cyan.100';
-    if (tipoLower === 'molho') return 'red.100';
-    if (tipoLower === 'sobremesa') return 'teal.100';
-    if (tipoLower === 'bebida') return 'gray.100';
-    return 'gray.100';
-  };
+  const renderCardapio = () => {
+    if (loading) {
+      return (
+        <Center p={8}>
+          <Spinner size="xl" color="teal.500" />
+        </Center>
+      );
+    }
 
-  // Função para determinar a cor do texto do cabeçalho
-  const getTipoTextColor = (tipo) => {
-    const tipoLower = tipo.toLowerCase();
-    if (tipoLower.includes('veg')) return 'green.700';
-    if (tipoLower.includes('mar')) return 'blue.700';
-    if (tipoLower.includes('protéico')) return 'orange.700';
-    if (tipoLower === 'entrada') return 'purple.700';
-    if (tipoLower === 'acompanhamento') return 'pink.700';
-    if (tipoLower === 'guarnição') return 'cyan.700';
-    if (tipoLower === 'molho') return 'red.700';
-    if (tipoLower === 'sobremesa') return 'teal.700';
-    if (tipoLower === 'bebida') return 'gray.700';
-    return 'gray.700';
+    if (!cardapio) {
+      return (
+        <Text color="gray.500" textAlign="center">
+          Selecione um restaurante e uma data para ver o cardápio
+        </Text>
+      );
+    }
+
+    return (
+      <VStack spacing={4} align="stretch">
+        {renderPratos(cardapio.pratos)}
+      </VStack>
+    );
   };
 
   return (
     <ChakraProvider theme={theme}>
-      <Box minH="100vh" py={8} bg="#faf7f2">
-        <Container maxW="container.md">
-          <VStack spacing={6} align="stretch">
-            {/* Cabeçalho */}
-            <Box 
-              textAlign="center" 
-              bg="white" 
-              p={6} 
-              borderRadius="2xl" 
-              boxShadow="sm"
-              border="1px"
-              borderColor="gray.100"
-            >
-              <Heading 
-                size="2xl" 
-                mb={3}
-                bgGradient="linear(to-r, teal.400, teal.600)"
-                bgClip="text"
+      <Box minH="100vh" bg="gray.50">
+        {/* Header */}
+        <Box bg="white" boxShadow="sm" position="sticky" top={0} zIndex={10}>
+          <Container maxW="container.lg" py={4}>
+            <Heading size="lg" color="green.600">MenuRU</Heading>
+          </Container>
+        </Box>
+
+        {/* Anúncio Superior */}
+        <Box bg="gray.100" p={4} mb={4}>
+          <Container maxW="container.lg">
+            <AdSense
+              slot="YOUR-SLOT-ID-1" // Substitua pelo ID do slot do anúncio horizontal superior
+              style={{
+                display: 'block',
+                textAlign: 'center',
+                height: '90px',
+              }}
+              format="horizontal"
+            />
+          </Container>
+        </Box>
+
+        <Container maxW="container.lg" py={4}>
+          <Grid templateColumns={{ base: "1fr", lg: "250px 1fr 250px" }} gap={6}>
+            {/* Sidebar Esquerda - Anúncios Verticais */}
+            <Box display={{ base: "none", lg: "block" }}>
+              <Box 
+                position="sticky"
+                top="100px"
               >
-                🍽️ RU UFMG
-              </Heading>
+                <AdSense
+                  slot="YOUR-SLOT-ID-2" // Substitua pelo ID do slot do anúncio vertical esquerdo
+                  style={{
+                    display: 'block',
+                    height: '600px',
+                  }}
+                  format="vertical"
+                />
+              </Box>
             </Box>
 
-            {/* Painel de Controle */}
-            <Card 
-              variant="outline" 
-              boxShadow="sm"
-              _hover={{ boxShadow: 'md' }}
-              transition="all 0.2s"
-            >
-              <CardBody>
-                <VStack spacing={6}>
-                  {/* Seleção de Data */}
-                  <HStack spacing={4} width="full" justify="center">
-                    <IconButton
-                      icon={<span>◀️</span>}
-                      onClick={() => setSelectedDate(subDays(selectedDate, 1))}
-                      aria-label="Dia anterior"
-                      colorScheme="teal"
-                      variant="outline"
-                      size="lg"
-                      _hover={{
-                        transform: 'translateX(-2px)',
-                      }}
-                    />
-                    
-                    <VStack spacing={1}>
-                      <Input
-                        type="date"
-                        value={format(selectedDate, 'yyyy-MM-dd')}
-                        onChange={handleDateChange}
-                        size="lg"
-                        width="200px"
-                        borderRadius="lg"
-                        _focus={{
-                          borderColor: 'teal.400',
-                          boxShadow: '0 0 0 1px var(--chakra-colors-teal-400)',
-                        }}
-                      />
-                      <Text color="gray.600" fontSize="sm" fontWeight="medium">
-                        {format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
-                      </Text>
-                    </VStack>
+            {/* Conteúdo Principal */}
+            <Box>
+              {renderControls()}
+              {renderCardapio()}
+            </Box>
 
-                    <IconButton
-                      icon={<span>▶️</span>}
-                      onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-                      aria-label="Próximo dia"
-                      colorScheme="teal"
-                      variant="outline"
-                      size="lg"
-                      _hover={{
-                        transform: 'translateX(2px)',
-                      }}
-                    />
-                  </HStack>
-
-                  {/* Seleção de Restaurante */}
-                  <Box w="full">
-                    <Select
-                      placeholder="Escolha um restaurante"
-                      value={selectedRestaurante}
-                      onChange={(e) => setSelectedRestaurante(e.target.value)}
-                      bg="white"
-                      size="lg"
-                      borderRadius="lg"
-                      _focus={{
-                        borderColor: 'teal.400',
-                        boxShadow: '0 0 0 1px var(--chakra-colors-teal-400)',
-                      }}
-                    >
-                      {restaurantes.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.nome}
-                        </option>
-                      ))}
-                    </Select>
-                  </Box>
-
-                  {/* Seleção de Refeição */}
-                  <HStack w="full" spacing={4}>
-                    <Button
-                      flex={1}
-                      colorScheme={tipoRefeicao === 'Almoço' ? 'teal' : 'gray'}
-                      onClick={() => setTipoRefeicao('Almoço')}
-                      size="lg"
-                      leftIcon={<span>🌞</span>}
-                      _hover={{
-                        transform: 'translateY(-2px)',
-                        boxShadow: 'md',
-                      }}
-                      transition="all 0.2s"
-                    >
-                      Almoço
-                    </Button>
-                    <Button
-                      flex={1}
-                      colorScheme={tipoRefeicao === 'Jantar' ? 'teal' : 'gray'}
-                      onClick={() => setTipoRefeicao('Jantar')}
-                      size="lg"
-                      leftIcon={<span>🌙</span>}
-                      _hover={{
-                        transform: 'translateY(-2px)',
-                        boxShadow: 'md',
-                      }}
-                      transition="all 0.2s"
-                    >
-                      Jantar
-                    </Button>
-                  </HStack>
-                </VStack>
-              </CardBody>
-            </Card>
-
-            {/* Conteúdo do Cardápio */}
-            {loading ? (
+            {/* Sidebar Direita - Anúncios Verticais */}
+            <Box display={{ base: "none", lg: "block" }}>
               <Box 
-                textAlign="center" 
-                py={8}
-                bg="white"
-                borderRadius="xl"
-                boxShadow="sm"
-                border="1px"
-                borderColor="gray.100"
+                position="sticky"
+                top="100px"
               >
-                <VStack spacing={4}>
-                  <Spinner size="xl" color="teal.500" thickness="4px" />
-                  <Text color="gray.600" fontSize="lg">
-                    Carregando cardápio...
-                  </Text>
-                </VStack>
+                <AdSense
+                  slot="YOUR-SLOT-ID-3" // Substitua pelo ID do slot do anúncio vertical direito
+                  style={{
+                    display: 'block',
+                    height: '600px',
+                  }}
+                  format="vertical"
+                />
               </Box>
-            ) : cardapio ? (
-              <Box>
-                {renderPratos(cardapio.pratos)}
-              </Box>
-            ) : selectedRestaurante ? (
-              <Box 
-                textAlign="center" 
-                py={8}
-                bg="orange.50"
-                borderRadius="xl"
-                boxShadow="sm"
-                border="1px"
-                borderColor="orange.100"
-              >
-                <Text color="orange.700" fontSize="lg">
-                  Cardápio não disponível para esta data 😕
-                </Text>
-              </Box>
-            ) : (
-              <Box 
-                textAlign="center" 
-                py={8}
-                bg="blue.50"
-                borderRadius="xl"
-                boxShadow="sm"
-                border="1px"
-                borderColor="blue.100"
-              >
-                <Text color="blue.700" fontSize="lg">
-                  Selecione um restaurante para ver o cardápio 👆
-                </Text>
-              </Box>
-            )}
-          </VStack>
+            </Box>
+          </Grid>
+
+          {/* Anúncio Mobile (visível apenas em telas pequenas) */}
+          <Box display={{ base: "block", lg: "none" }} mt={6}>
+            <AdSense
+              slot="YOUR-SLOT-ID-4" // Substitua pelo ID do slot do anúncio mobile
+              style={{
+                display: 'block',
+                height: '250px',
+              }}
+              format="rectangle"
+            />
+          </Box>
         </Container>
-        <Box as="footer" py={4} textAlign="center" borderTop="1px" borderColor="gray.200" mt={8}>
+
+        {/* Footer */}
+        <Box as="footer" py={4} textAlign="center" borderTop="1px" borderColor="gray.200" mt={8} bg="white">
           <Text fontSize="sm" color="gray.600">
             MenuRU {new Date().getFullYear()}
           </Text>
-          <Text fontSize="xs" color="gray.500" mt={2}>
-            Esta é uma aplicação não oficial desenvolvida de forma independente.
-            Não possui qualquer vínculo oficial com instituições de ensino.
-          </Text>
+          <Link 
+            href="https://www.linkedin.com/in/luborgs/" 
+            isExternal 
+            display="inline-flex"
+            alignItems="center"
+            color="linkedin.500"
+            mt={2}
+            _hover={{ textDecoration: 'none', color: 'linkedin.600' }}
+          >
+            <Text fontSize="sm" mr={2}>Desenvolvido por Lucas Borges</Text>
+            <Icon viewBox="0 0 24 24" boxSize={5}>
+              <path
+                fill="currentColor"
+                d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.68 1.68 0 0 0-1.68 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"
+              />
+            </Icon>
+          </Link>
         </Box>
       </Box>
     </ChakraProvider>
