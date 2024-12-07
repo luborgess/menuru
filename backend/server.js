@@ -20,7 +20,7 @@ app.use(limiter);
 
 // Configuração CORS
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'https://menuru.vercel.app'],
+    origin: ['http://localhost:5173', 'https://menuru.vercel.app', 'https://menuru-vuwh-kj28xhsdy-lucas-borges-projects-77da4699.vercel.app'],
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
@@ -58,11 +58,30 @@ const validateRestauranteId = (req, res, next) => {
 
 // Get list of restaurants
 app.get('/api/restaurantes', async (req, res) => {
+    console.log('Recebida requisição para /api/restaurantes');
     try {
+        console.log('Tentando acessar:', `${baseUrl}/restaurantes`);
+        console.log('Headers:', headers);
         const response = await axios.get(`${baseUrl}/restaurantes`, { headers });
+        console.log('Resposta recebida com sucesso');
         res.json(response.data);
     } catch (error) {
-        console.error('Error fetching restaurants:', error);
+        console.error('Erro ao buscar restaurantes:');
+        if (error.response) {
+            // A requisição foi feita e o servidor respondeu com um status diferente de 2xx
+            console.error('Dados do erro:', {
+                status: error.response.status,
+                data: error.response.data,
+                headers: error.response.headers
+            });
+        } else if (error.request) {
+            // A requisição foi feita mas não houve resposta
+            console.error('Sem resposta do servidor');
+            console.error(error.request);
+        } else {
+            // Algo aconteceu na configuração da requisição que causou o erro
+            console.error('Erro na configuração:', error.message);
+        }
         res.status(500).json({ error: 'Erro ao buscar restaurantes' });
     }
 });
