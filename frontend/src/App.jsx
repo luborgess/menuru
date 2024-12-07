@@ -29,6 +29,7 @@ import axios from 'axios';
 import { format, addDays, subDays, isToday, isFuture, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AdSense from './components/AdSense';
+import CustomAd from './components/CustomAd';
 
 const theme = extendTheme({
   styles: {
@@ -142,7 +143,9 @@ function App() {
   };
 
   const handleDateChange = (event) => {
-    const date = new Date(event.target.value);
+    const dateStr = event.target.value;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month - 1 porque os meses em JS são 0-based
     setSelectedDate(date);
   };
 
@@ -431,34 +434,36 @@ function App() {
           </Container>
         </Box>
 
-        {/* Anúncio Superior */}
-        <Box bg="gray.100" p={4} mb={4}>
-          <Container maxW="container.lg">
-            <AdSense
-              slot="YOUR-SLOT-ID-1" // Substitua pelo ID do slot do anúncio horizontal superior
-              style={{
-                display: 'block',
-                textAlign: 'center',
-                height: '90px',
-              }}
-              format="horizontal"
-            />
-          </Container>
-        </Box>
+        {/* Anúncio Superior - Seu Anúncio Personalizado */}
+        <CustomAd
+          format="horizontal"
+          imageUrl="/ads/lp.png"
+          link="https://wa.me/5531936199338"
+        />
 
         <Container maxW="container.lg" py={4}>
-          <Grid templateColumns={{ base: "1fr", lg: "250px 1fr 250px" }} gap={6}>
-            {/* Sidebar Esquerda - Anúncios Verticais */}
+          <Grid 
+            templateColumns={{ 
+              base: "1fr", 
+              lg: "200px 1fr 200px"
+            }} 
+            gap={{ base: 4, lg: 6 }}
+          >
+            {/* Sidebar Esquerda - AdSense */}
             <Box display={{ base: "none", lg: "block" }}>
               <Box 
                 position="sticky"
                 top="100px"
+                width="100%"
               >
                 <AdSense
-                  slot="YOUR-SLOT-ID-2" // Substitua pelo ID do slot do anúncio vertical esquerdo
+                  slot="YOUR-SLOT-ID-2"
                   style={{
                     display: 'block',
+                    width: '100%',
                     height: '600px',
+                    maxWidth: '160px',
+                    margin: '0 auto'
                   }}
                   format="vertical"
                 />
@@ -471,17 +476,21 @@ function App() {
               {renderCardapio()}
             </Box>
 
-            {/* Sidebar Direita - Anúncios Verticais */}
+            {/* Sidebar Direita - AdSense */}
             <Box display={{ base: "none", lg: "block" }}>
               <Box 
                 position="sticky"
                 top="100px"
+                width="100%"
               >
                 <AdSense
-                  slot="YOUR-SLOT-ID-3" // Substitua pelo ID do slot do anúncio vertical direito
+                  slot="YOUR-SLOT-ID-3"
                   style={{
                     display: 'block',
+                    width: '100%',
                     height: '600px',
+                    maxWidth: '160px',
+                    margin: '0 auto'
                   }}
                   format="vertical"
                 />
@@ -489,16 +498,32 @@ function App() {
             </Box>
           </Grid>
 
-          {/* Anúncio Mobile (visível apenas em telas pequenas) */}
-          <Box display={{ base: "block", lg: "none" }} mt={6}>
-            <AdSense
-              slot="YOUR-SLOT-ID-4" // Substitua pelo ID do slot do anúncio mobile
-              style={{
-                display: 'block',
-                height: '250px',
-              }}
-              format="rectangle"
-            />
+          {/* Anúncios Mobile - Aparecem entre o conteúdo em telas pequenas */}
+          <Box 
+            display={{ base: "block", lg: "none" }} 
+            mt={6}
+          >
+            <Grid templateColumns="1fr" gap={4}>
+              {/* Anúncio Mobile Superior */}
+              <AdSense
+                slot="YOUR-SLOT-ID-4"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  height: '250px',
+                  maxWidth: '300px',
+                  margin: '0 auto'
+                }}
+                format="rectangle"
+              />
+              
+              {/* Seu Anúncio Mobile */}
+              <CustomAd
+                format="rectangle"
+                imageUrl="/ads/lp-mobile.png"
+                link="https://wa.me/5531936199338"
+              />
+            </Grid>
           </Box>
         </Container>
 
