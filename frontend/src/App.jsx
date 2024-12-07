@@ -73,7 +73,7 @@ const keywordCategories = {
   ]
 };
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://fump.ufmg.br:3003/cardapios';
 
 function App() {
   const [restaurantes, setRestaurantes] = useState([]);
@@ -83,6 +83,10 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const toast = useToast();
+
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+  };
 
   useEffect(() => {
     fetchRestaurantes();
@@ -96,11 +100,12 @@ function App() {
 
   const fetchRestaurantes = async () => {
     try {
-      const response = await axios.get(`${API_URL}/restaurantes`);
+      const response = await axios.get(`${API_URL}/restaurantes`, { headers });
       setRestaurantes(response.data);
     } catch (error) {
       toast({
         title: 'Erro ao carregar restaurantes',
+        description: 'Não foi possível carregar a lista de restaurantes',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -112,12 +117,19 @@ function App() {
     setLoading(true);
     try {
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-      const response = await axios.get(
-        `${API_URL}/cardapio/${selectedRestaurante}/${tipoRefeicao}?data=${formattedDate}`
-      );
-      if (response.data && Object.keys(response.data).length > 0) {
-        setCardapio(response.data);
-      } else {
+      const params = {
+        id: selectedRestaurante,
+        dataInicio: formattedDate,
+        dataFim: formattedDate
+      };
+      
+      const response = await axios.get(`${API_URL}/cardapio`, { 
+        params,
+        headers 
+      });
+
+      const cardapios = response.data.cardapios;
+      if (!cardapios || cardapios.length === 0) {
         setCardapio(null);
         toast({
           title: 'Cardápio não disponível',
@@ -126,14 +138,40 @@ function App() {
           duration: 3000,
           isClosable: true,
         });
+        return;
       }
+
+      // Find the specific meal type
+      let selectedMenu = null;
+      for (const cardapio of cardapios) {
+        for (const refeicao of cardapio.refeicoes) {
+          if (refeicao.tipoRefeicao === tipoRefeicao) {
+            selectedMenu = refeicao;
+            break;
+          }
+        }
+      }
+
+      if (!selectedMenu) {
+        setCardapio(null);
+        toast({
+          title: 'Cardápio não disponível',
+          description: 'Tipo de refeição não encontrado para esta data',
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      setCardapio(selectedMenu);
     } catch (error) {
       console.error('Error fetching menu:', error);
       setCardapio(null);
       toast({
         title: 'Cardápio não disponível',
-        description: 'Não encontramos o cardápio para esta data',
-        status: 'warning',
+        description: 'Não foi possível carregar o cardápio',
+        status: 'error',
         duration: 3000,
         isClosable: true,
       });
