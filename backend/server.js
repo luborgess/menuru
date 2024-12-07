@@ -20,7 +20,7 @@ app.use(limiter);
 
 // Configuração CORS
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'https://menuru.vercel.app'],
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
