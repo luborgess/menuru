@@ -426,7 +426,7 @@ function App() {
 
   return (
     <ChakraProvider theme={theme}>
-      <Box minH="100vh" bg="gray.50">
+      <Box minH="100vh" bg="#FAF7F2">
         {/* Header */}
         <Box bg="white" boxShadow="sm" position="sticky" top={0} zIndex={10}>
           <Container maxW="container.lg" py={4}>
