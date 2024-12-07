@@ -28,14 +28,54 @@ Uma aplicação web para consulta de cardápios de restaurantes universitários.
 - Node.js (versão 14 ou superior)
 - npm ou yarn
 
-### Rodando o projeto
-```bash
-# Instale as dependências do backend e frontend
-npm install
+### Configuração do Ambiente
 
-# Inicie o servidor
-npm start
+1. Clone o repositório
+```bash
+git clone <seu-repositorio>
+cd menuru
 ```
+
+2. Configure as variáveis de ambiente
+
+Backend (.env):
+```env
+PORT=3001
+NODE_ENV=development
+```
+
+Frontend (.env.local):
+```env
+VITE_API_URL=http://localhost:3001/api
+```
+
+### Instalação e Execução
+
+1. Backend:
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+2. Frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O frontend estará disponível em `http://localhost:5173` e o backend em `http://localhost:3001`.
+
+### Deploy
+
+O projeto está configurado para deploy na Vercel. Certifique-se de configurar as seguintes variáveis de ambiente no projeto da Vercel:
+
+- Backend:
+  - `NODE_ENV`: "production"
+
+- Frontend:
+  - `VITE_API_URL`: URL do seu backend na Vercel
 
 ## 📝 Licença
 

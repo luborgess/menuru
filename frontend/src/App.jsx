@@ -75,6 +75,11 @@ const keywordCategories = {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
+// Configuração global do axios para não usar cache
+axios.defaults.headers.common['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+axios.defaults.headers.common['Pragma'] = 'no-cache';
+axios.defaults.headers.common['Expires'] = '0';
+
 function App() {
   const [restaurantes, setRestaurantes] = useState([]);
   const [selectedRestaurante, setSelectedRestaurante] = useState('');
@@ -90,53 +95,109 @@ function App() {
 
   useEffect(() => {
     if (selectedRestaurante) {
-      fetchCardapio();
+      fetchCardapio(selectedRestaurante, tipoRefeicao, selectedDate);
     }
   }, [selectedRestaurante, tipoRefeicao, selectedDate]);
 
   const fetchRestaurantes = async () => {
     try {
+      console.log('[DEBUG] Buscando lista de restaurantes...');
       const response = await axios.get(`${API_URL}/restaurantes`);
+      
+      if (!response.data || !Array.isArray(response.data)) {
+        console.error('[DEBUG] Resposta inválida:', response.data);
+        throw new Error('Formato de resposta inválido');
+      }
+
+      console.log('[DEBUG] Restaurantes recebidos:', response.data);
       setRestaurantes(response.data);
     } catch (error) {
+      console.error('[DEBUG] Erro detalhado:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url
+      });
+
       toast({
         title: 'Erro ao carregar restaurantes',
+        description: error.response?.data?.message || 'Não foi possível carregar a lista de restaurantes',
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
     }
   };
 
-  const fetchCardapio = async () => {
-    setLoading(true);
+  const fetchCardapio = async (restauranteId, tipoRefeicao, data) => {
     try {
-      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-      const response = await axios.get(
-        `${API_URL}/cardapio/${selectedRestaurante}/${tipoRefeicao}?data=${formattedDate}`
-      );
-      if (response.data && Object.keys(response.data).length > 0) {
-        setCardapio(response.data);
-      } else {
-        setCardapio(null);
+      console.log(`[DEBUG] Buscando cardápio para:`, {
+        restauranteId,
+        tipoRefeicao,
+        data,
+        timestamp: new Date().toISOString()
+      });
+
+      if (!restauranteId || !tipoRefeicao || !data) {
+        console.log('[DEBUG] Parâmetros inválidos:', { restauranteId, tipoRefeicao, data });
         toast({
-          title: 'Cardápio não disponível',
-          description: 'Não encontramos o cardápio para esta data',
-          status: 'warning',
-          duration: 3000,
+          title: 'Erro',
+          description: 'Por favor, selecione um restaurante, tipo de refeição e data.',
+          status: 'error',
+          duration: 5000,
           isClosable: true,
         });
+        return;
       }
+
+      // Formata a data para YYYY-MM-DD
+      const dataFormatada = format(data, 'yyyy-MM-dd');
+      
+      const response = await axios.get(
+        `${API_URL}/cardapio/${restauranteId}/${tipoRefeicao}`,
+        {
+          params: {
+            data: dataFormatada,
+            _t: Date.now() // Cache buster
+          }
+        }
+      );
+
+      console.log(`[DEBUG] Resposta recebida em ${new Date().toISOString()}:`, response.data);
+
+      if (!response.data || !response.data.pratos || response.data.pratos.length === 0) {
+        console.log('[DEBUG] Resposta sem pratos:', response.data);
+        toast({
+          title: 'Cardápio não disponível',
+          description: 'Não há cardápio disponível para esta data e refeição.',
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+        });
+        setCardapio(null);
+        return;
+      }
+
+      console.log(`[DEBUG] Menu válido encontrado com ${response.data.pratos.length} pratos`);
+      setCardapio(response.data);
     } catch (error) {
-      console.error('Error fetching menu:', error);
-      setCardapio(null);
+      console.log('[DEBUG] Erro detalhado:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url
+      });
+
+      const mensagem = error.response?.data?.message || 'Erro ao buscar o cardápio. Tente novamente mais tarde.';
+      
       toast({
-        title: 'Cardápio não disponível',
-        description: 'Não encontramos o cardápio para esta data',
-        status: 'warning',
-        duration: 3000,
+        title: 'Erro',
+        description: mensagem,
+        status: 'error',
+        duration: 5000,
         isClosable: true,
       });
+      setCardapio(null);
     } finally {
       setLoading(false);
     }
@@ -152,7 +213,7 @@ function App() {
   const getEmojiForType = (tipo, descricao = '') => {
     const tipoLower = tipo.toLowerCase();
     const descricaoLower = descricao.toLowerCase();
-    
+
     // Emojis específicos para cada categoria de prato protéico
     if (tipoLower.includes('prato protéico')) {
       if (tipoLower.includes('veg')) {
@@ -166,7 +227,7 @@ function App() {
       }
       return '🍖';
     }
-    
+
     // Para outros tipos de pratos, usa o mapeamento padrão
     for (const [key, emoji] of Object.entries(dishEmojis)) {
       if (tipoLower.includes(key.toLowerCase())) {
@@ -223,10 +284,10 @@ function App() {
 
   const renderPratos = (pratos) => {
     const pratosPorTipo = {};
-    
+
     // Adiciona refresco como item padrão
     pratosPorTipo['Bebida'] = ['Refresco'];
-    
+
     pratos.forEach((prato) => {
       // Normaliza o tipo do prato removendo números e simplificando nomes
       const descricaoLower = prato.descricaoPrato.toLowerCase();
@@ -251,7 +312,7 @@ function App() {
       // Verifica se é um molho
       if (keywordCategories.molho.some(keyword => descricaoLower.includes(keyword))) {
         tipo = 'Molho';
-      } 
+      }
       // Se for prato protéico, categoriza baseado no conteúdo
       else if (tipo.toLowerCase().includes('prato protéico')) {
         // Verifica o conteúdo do prato para determinar a categoria
@@ -272,7 +333,7 @@ function App() {
           }
         }
       }
-      
+
       if (!pratosPorTipo[tipo]) {
         pratosPorTipo[tipo] = [];
       }
@@ -301,10 +362,10 @@ function App() {
     });
 
     return categorias.map(([tipo, pratos]) => (
-      <Card 
-        key={tipo} 
-        mb={4} 
-        variant="outline" 
+      <Card
+        key={tipo}
+        mb={4}
+        variant="outline"
         boxShadow="sm"
         bg="white"
         borderRadius="xl"
@@ -325,9 +386,9 @@ function App() {
             borderBottom="1px"
             borderColor={getTipoBorderColor(tipo)}
           >
-            <Text 
-              fontSize="lg" 
-              fontWeight="bold" 
+            <Text
+              fontSize="lg"
+              fontWeight="bold"
               color={getTipoTextColor(tipo)}
               display="flex"
               alignItems="center"
@@ -341,9 +402,9 @@ function App() {
           </Box>
           <List spacing={3}>
             {pratos.map((prato, index) => (
-              <ListItem 
-                key={index} 
-                display="flex" 
+              <ListItem
+                key={index}
+                display="flex"
                 alignItems="center"
                 p={3}
                 borderRadius="md"
@@ -409,11 +470,40 @@ function App() {
       );
     }
 
-    if (!cardapio) {
+    if (!selectedRestaurante) {
       return (
-        <Text color="gray.500" textAlign="center">
-          Selecione um restaurante e uma data para ver o cardápio
-        </Text>
+        <Box
+          p={8}
+          textAlign="center"
+          bg="blue.50"
+          borderRadius="lg"
+          border="1px"
+          borderColor="blue.200"
+        >
+          <Text fontSize="lg" color="blue.800">
+            Selecione um restaurante para ver o cardápio
+          </Text>
+        </Box>
+      );
+    }
+
+    if (!cardapio || !Array.isArray(cardapio.pratos) || cardapio.pratos.length === 0) {
+      return (
+        <Box
+          p={8}
+          textAlign="center"
+          bg="orange.50"
+          borderRadius="lg"
+          border="1px"
+          borderColor="orange.200"
+        >
+          <Text fontSize="lg" color="orange.800">
+            Não há cardápio de {tipoRefeicao.toLowerCase()} disponível para {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
+          </Text>
+          <Text fontSize="sm" color="orange.600" mt={2}>
+            Tente selecionar outra data ou tipo de refeição
+          </Text>
+        </Box>
       );
     }
 
@@ -442,16 +532,16 @@ function App() {
         />
 
         <Container maxW="container.lg" py={4}>
-          <Grid 
-            templateColumns={{ 
-              base: "1fr", 
+          <Grid
+            templateColumns={{
+              base: "1fr",
               lg: "200px 1fr 200px"
-            }} 
+            }}
             gap={{ base: 4, lg: 6 }}
           >
             {/* Sidebar Esquerda - AdSense */}
             <Box display={{ base: "none", lg: "block" }}>
-              <Box 
+              <Box
                 position="sticky"
                 top="100px"
                 width="100%"
@@ -478,7 +568,7 @@ function App() {
 
             {/* Sidebar Direita - AdSense */}
             <Box display={{ base: "none", lg: "block" }}>
-              <Box 
+              <Box
                 position="sticky"
                 top="100px"
                 width="100%"
@@ -499,8 +589,8 @@ function App() {
           </Grid>
 
           {/* Anúncios Mobile - Aparecem entre o conteúdo em telas pequenas */}
-          <Box 
-            display={{ base: "block", lg: "none" }} 
+          <Box
+            display={{ base: "block", lg: "none" }}
             mt={6}
           >
             <Grid templateColumns="1fr" gap={4}>
@@ -516,7 +606,7 @@ function App() {
                 }}
                 format="rectangle"
               />
-              
+
               {/* Seu Anúncio Mobile */}
               <CustomAd
                 format="rectangle"
@@ -532,9 +622,9 @@ function App() {
           <Text fontSize="sm" color="gray.600">
             MenuRU {new Date().getFullYear()}
           </Text>
-          <Link 
-            href="https://www.linkedin.com/in/luborgs/" 
-            isExternal 
+          <Link
+            href="https://www.linkedin.com/in/luborgs/"
+            isExternal
             display="inline-flex"
             alignItems="center"
             color="linkedin.500"

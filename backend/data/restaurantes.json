@@ -1,0 +1,20 @@
+{
+    "restaurantes": [
+        {
+            "id": 1,
+            "nome": "Restaurante Setorial I"
+        },
+        {
+            "id": 2,
+            "nome": "Restaurante Setorial II"
+        },
+        {
+            "id": 5,
+            "nome": "Restaurante FUMP/CENTRO"
+        },
+        {
+            "id": 6,
+            "nome": "Restaurante ICA"
+        }
+    ]
+}
